@@ -1,0 +1,106 @@
+# ---------------------------------------------------------------------------
+# Sample definition for Milestone 1.  Every script reads this file, so the
+# sample is fully described here and the whole pipeline is reproducible.
+# Change these values, rerun, and every table is rebuilt from scratch.
+# ---------------------------------------------------------------------------
+
+sample:
+  # Markets whose scheduled end date falls in this window (UTC, ISO 8601).
+  end_date_min: "2026-05-01T00:00:00Z"
+  end_date_max: "2026-09-30T23:59:59Z"
+  # Lifetime volume bounds in USDC. The upper bound keeps trade pulls tractable;
+  # the lower bound drops markets too thin to say anything about.
+  volume_min: 50000
+  volume_max: 3000000
+  # Keep only binary markets that resolved cleanly to 1/0.
+  binary_only: true
+  # Cap on number of markets (random draw with the seed below if more qualify).
+  max_markets: 20
+  seed: 42
+  # Drop ultra-short markets (bots, no meaningful time-to-resolution).
+  min_lifetime_days: 3
+  # Keep only markets that resolved at a time known in advance (see s01 for the
+  # rule). Set to false to keep "by <date>" markets too; the scheduled column
+  # still tags them so you can analyze the two types separately.
+  require_scheduled: true
+  # Resolved within this many hours of the scheduled end date counts as on time.
+  scheduled_tolerance_hours: 48
+
+  # Topics to keep. A market matches a topic if any of its event tags (slug or
+  # label, case-insensitive) is in `tags`, OR its question matches one of the
+  # `keywords` (regular expressions, case-insensitive). Markets matching no
+  # topic are dropped. After the pilot, open data/interim/tag_counts.csv to see
+  # which tags actually occur, and edit these lists.
+  topics:
+    economics:
+      tags: [economy, economics, fed, fed-rates, inflation, cpi, jobs, macro, interest-rates]
+      keywords:
+        - '\bCPI\b'
+        - '\binflation\b'
+        - '\b(fed|fomc|federal reserve)\b'
+        - '\binterest rates?\b'
+        - '\brate (cut|hike)s?\b'
+        - '\b(nonfarm|payrolls?|jobs report)\b'
+        - '\bunemployment\b'
+        - '\bjobless claims\b'
+        - '\bGDP\b'
+        - '\bPCE\b'
+    politics:
+      tags: [politics, us-politics, elections, us-elections, primaries, congress, senate, house, governor, trump]
+      keywords:
+        - '\b(election|primary|runoff|caucus)\b'
+        - '\b(senate|house|governor|mayor|congress)\b'
+        - '\b(nominee|nomination)\b'
+        - '\bdebate\b'
+        - '\bapproval rating\b'
+  # Markets to drop even if they match a topic (regex on the question, and
+  # tag slugs/labels). Polymarket files Elon Musk tweet-count markets under
+  # politics; they are not political-information markets.
+  exclude_keywords:
+    - '\btweets?\b'
+    - '\bpost \d'
+  exclude_tags: []
+  # Keep only markets carrying at least one of these tags (empty = no
+  # restriction). Use it to restrict to US markets: after a --from-raw run,
+  # open data/interim/tag_counts_passed.csv and copy the US tags here.
+  require_any_tags: []
+  # Caps applied in the random draw (null = no cap):
+  #   max_per_event - legs of one multi-candidate event (e.g. one nominee per
+  #                   candidate in the same primary) are not independent markets
+  #   max_per_topic - keeps one topic from swamping the sample
+  max_per_event: 3
+  max_per_topic: 150
+
+  # Phrases that mark a "by <date>" market: resolves early when the event
+  # happens, so its resolution time is not known in advance.
+  by_date_patterns:
+    - '\bby (the end of )?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)'
+    - '\bby (end of )?\d{4}\b'
+    - '\bby (the )?end of\b'
+    - '\bbefore (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d)'
+    - '\bin 2026\?$'
+
+collection:
+  # Polite pause between API calls, in seconds.
+  sleep: 0.25
+  # Price history resolution in minutes for /prices-history.
+  price_fidelity_min: 10
+
+measures:
+  # Share of each market's lifetime (by resolution date) used to estimate
+  # skill; the remaining markets are where timing/informativeness is tested.
+  # Splitting by calendar time means skill is never measured on the same
+  # markets it is used to explain.
+  skill_split_quantile: 0.5
+  # Minimum markets a wallet must trade in the estimation set to get a skill label.
+  min_markets_for_skill: 5
+  # Markout horizons (hours) for trade informativeness.
+  markout_hours: [1, 24]
+  # Bins of normalized time-to-resolution (0 = market open, 1 = resolution).
+  life_bins: [0.0, 0.5, 0.75, 0.9, 0.97, 1.0]
+
+paths:
+  raw: data/raw
+  interim: data/interim
+  processed: data/processed
+  output: output
