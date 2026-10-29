@@ -15,7 +15,7 @@ sample:
   # Keep only binary markets that resolved cleanly to 1/0.
   binary_only: true
   # Cap on number of markets (random draw with the seed below if more qualify).
-  max_markets: 20
+  max_markets: 300
   seed: 42
   # Drop ultra-short markets (bots, no meaningful time-to-resolution).
   min_lifetime_days: 3
@@ -85,6 +85,8 @@ collection:
   sleep: 0.25
   # Price history resolution in minutes for /prices-history.
   price_fidelity_min: 10
+  # /prices-history rejects long windows, so it is fetched in chunks this long.
+  price_chunk_days: 7
 
 measures:
   # Share of each market's lifetime (by resolution date) used to estimate

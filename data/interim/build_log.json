@@ -1,0 +1,11 @@
+{
+  "taker_rows": 308681,
+  "all_rows": 792709,
+  "maker_rows": 484028,
+  "rows_unknown_token": 0,
+  "rows_bad_price_or_size": 0,
+  "markets_without_trades": 0,
+  "fills_rows": 792709,
+  "self_trade_rows": 0,
+  "self_trade_usdc_share": 0.0
+}
